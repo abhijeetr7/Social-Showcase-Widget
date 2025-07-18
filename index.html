@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Showcase Widget</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for Inter font and general styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to start to prevent vertical centering issues on smaller content */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Define grid and list view styles */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem; /* 16px */
+        }
+
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* 12px */
+        }
+
+        /* Specific card styles for list view to make them full width */
+        .content-list .content-card {
+            width: 100%;
+            flex-direction: row; /* Make cards horizontal in list view */
+            align-items: center;
+            padding: 0.75rem; /* Reduced padding for list items */
+        }
+
+        .content-list .content-card .card-image-container {
+            width: 100px; /* Fixed width for image in list view */
+            height: 60px; /* Fixed height for image in list view */
+            flex-shrink: 0; /* Prevent image from shrinking */
+            margin-right: 0.75rem; /* Space between image and text */
+            border-radius: 0.5rem; /* Rounded corners for image container */
+            overflow: hidden; /* Hide overflow for rounded corners */
+        }
+
+        .content-list .content-card .card-content {
+            flex-grow: 1; /* Allow content to take remaining space */
+        }
+
+        .content-list .content-card .card-title {
+            font-size: 1rem; /* Smaller title for list view */
+            margin-bottom: 0.25rem;
+        }
+
+        .content-list .content-card .card-description,
+        .content-list .content-card .card-meta {
+            font-size: 0.875rem; /* Smaller text for list view */
+            display: -webkit-box;
+            -webkit-line-clamp: 1; /* Limit description to 1 line in list view */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Loading spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6; /* Blue-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Ensure images fill their container */
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the container while maintaining aspect ratio */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div id="social-showcase" class="w-full max-w-4xl bg-white shadow-lg rounded-xl p-6 md:p-8">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+            <h1 class="text-3xl font-extrabold text-gray-800 mb-4 md:mb-0">My Social Showcase</h1>
+            <div class="flex space-x-3">
+                <button id="toggle-grid" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200 ease-in-out">
+                    Grid View
+                </button>
+                <button id="toggle-list" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 transition duration-200 ease-in-out">
+                    List View
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area - Switches between showcase and all-content views -->
+        <div id="main-content-area">
+            <!-- Showcase View (Default) -->
+            <div id="showcase-view">
+                <!-- Blog Section -->
+                <section class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-700 flex items-center">
+                            <span class="mr-2">📝</span> Latest Blog Posts
+                        </h2>
+                        <button id="view-all-blog-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition duration-200 ease-in-out">View All</button>
+                    </div>
+                    <div id="blog-content" class="content-grid">
+                        <div class="flex justify-center items-center h-48 col-span-full">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                    <div id="blog-pagination" class="flex justify-center items-center mt-4 space-x-4">
+                        <button id="blog-prev-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Previous</button>
+                        <span id="blog-page-info" class="text-gray-700">Page 1 of 1</span>
+                        <button id="blog-next-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Next</button>
+                    </div>
+                </section>
+
+                <!-- YouTube Section -->
+                <section class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-700 flex items-center">
+                            <span class="mr-2">▶️</span> Recent YouTube Videos
+                        </h2>
+                        <button id="view-all-youtube-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition duration-200 ease-in-out">View All</button>
+                    </div>
+                    <div id="youtube-content" class="content-grid">
+                        <div class="flex justify-center items-center h-48 col-span-full">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                    <div id="youtube-pagination" class="flex justify-center items-center mt-4 space-x-4">
+                        <button id="youtube-prev-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Previous</button>
+                        <span id="youtube-page-info" class="text-gray-700">Page 1 of 1</span>
+                        <button id="youtube-next-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Next</button>
+                    </div>
+                </section>
+
+                <!-- GitHub Section -->
+                <section>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-700 flex items-center">
+                            <span class="mr-2">🐙</span> Popular GitHub Repos
+                        </h2>
+                        <button id="view-all-github-btn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300 transition duration-200 ease-in-out">View All</button>
+                    </div>
+                    <div id="github-content" class="content-grid">
+                        <div class="flex justify-center items-center h-48 col-span-full">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                    <div id="github-pagination" class="flex justify-center items-center mt-4 space-x-4">
+                        <button id="github-prev-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Previous</button>
+                        <span id="github-page-info" class="text-gray-700">Page 1 of 1</span>
+                        <button id="github-next-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Next</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- All Content View (Initially Hidden) -->
+            <div id="all-content-view" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <button id="back-to-main-btn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 transition duration-200 ease-in-out">
+                        &larr; Back to Showcase
+                    </button>
+                    <h2 id="all-content-title" class="text-3xl font-extrabold text-gray-800"></h2>
+                </div>
+                <div id="dynamic-single-section-content" class="content-grid">
+                    <!-- Content will be loaded here -->
+                </div>
+                <div id="dynamic-single-section-pagination" class="flex justify-center items-center mt-4 space-x-4">
+                    <button id="dynamic-prev-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Previous</button>
+                    <span id="dynamic-page-info" class="text-gray-700">Page 1 of 1</span>
+                    <button id="dynamic-next-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 ease-in-out">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set up Inter font (optional, but good practice if not using a framework that handles it)
+        const link = document.createElement('link');
+        link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+
+        // --- Configuration ---
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+        const VIEW_KEY = 'socialShowcaseView'; // localStorage key for view preference
+        const ITEMS_PER_PAGE = 20; // Number of items to show per page
+
+        // --- DOM Elements ---
+        const mainContentArea = document.getElementById('main-content-area');
+        const showcaseView = document.getElementById('showcase-view');
+        const allContentView = document.getElementById('all-content-view');
+        const allContentTitle = document.getElementById('all-content-title');
+        const dynamicSingleSectionContent = document.getElementById('dynamic-single-section-content');
+        const dynamicPrevBtn = document.getElementById('dynamic-prev-btn');
+        const dynamicNextBtn = document.getElementById('dynamic-next-btn');
+        const dynamicPageInfo = document.getElementById('dynamic-page-info');
+
+        const blogContentDiv = document.getElementById('blog-content');
+        const youtubeContentDiv = document.getElementById('youtube-content');
+        const githubContentDiv = document.getElementById('github-content');
+        const toggleGridBtn = document.getElementById('toggle-grid');
+        const toggleListBtn = document.getElementById('toggle-list');
+
+        // Pagination elements for showcase view
+        const blogPrevBtn = document.getElementById('blog-prev-btn');
+        const blogNextBtn = document.getElementById('blog-next-btn');
+        const blogPageInfo = document.getElementById('blog-page-info');
+
+        const youtubePrevBtn = document.getElementById('youtube-prev-btn');
+        const youtubeNextBtn = document.getElementById('youtube-next-btn');
+        const youtubePageInfo = document.getElementById('youtube-page-info');
+
+        const githubPrevBtn = document.getElementById('github-prev-btn');
+        const githubNextBtn = document.getElementById('github-next-btn');
+        const githubPageInfo = document.getElementById('github-page-info');
+
+        // View All buttons
+        const viewAllBlogBtn = document.getElementById('view-all-blog-btn');
+        const viewAllYoutubeBtn = document.getElementById('view-all-youtube-btn');
+        const viewAllGithubBtn = document.getElementById('view-all-github-btn');
+        const backToMainBtn = document.getElementById('back-to-main-btn');
+
+        let currentView = localStorage.getItem(VIEW_KEY) || 'grid'; // Default to grid
+        let currentDisplayMode = 'showcase'; // 'showcase' or 'blog-all', 'youtube-all', 'github-all'
+        let currentAllContentType = ''; // Stores which type is currently viewed in 'all-content' mode
+
+        // Store current page and all data for each section
+        const pageStates = {
+            blog: { currentPage: 1, data: [] },
+            youtube: { currentPage: 1, data: [] },
+            github: { currentPage: 1, data: [] }
+        };
+
+        // --- Helper Functions ---
+
+        /**
+         * Simulates an API call with a delay and returns mock data.
+         * Increased data count to demonstrate pagination.
+         * @param {string} type - The type of data to fetch (blog, youtube, github).
+         * @returns {Promise<Array>} A promise that resolves with mock data.
+         */
+        async function fetchData(type) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    let data = [];
+                    for (let i = 1; i <= 50; i++) { // Generate 50 items for each category
+                        if (type === 'blog') {
+                            data.push({ id: `b${i}`, title: `Blog Post Title ${i}`, url: `#`, date: `2024-07-${(50 - i + 1).toString().padStart(2, '0')}`, snippet: `This is a snippet for blog post number ${i}. It provides a brief overview of the content.` });
+                        } else if (type === 'youtube') {
+                            data.push({ id: `y${i}`, title: `YouTube Video ${i} - Cool Tech`, url: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`, thumbnailUrl: `https://placehold.co/400x225/${Math.floor(Math.random()*16777215).toString(16)}/ffffff?text=YT+${i}`, views: `${(Math.random() * 2 + 0.5).toFixed(1)}M`, publishedAt: `2024-07-${(50 - i + 1).toString().padStart(2, '0')}` });
+                        } else if (type === 'github') {
+                            data.push({ id: `g${i}`, name: `repo-${i}-project`, url: `https://github.com/example/repo-${i}`, description: `Description for GitHub repository number ${i}. This project is awesome!`, stars: `${Math.floor(Math.random() * 20 + 1)}K`, language: ['JavaScript', 'Python', 'HTML/CSS', 'Vue'][Math.floor(Math.random() * 4)] });
+                        }
+                    }
+                    resolve(data);
+                }, 500); // Simulate 0.5 second network delay
+            });
+        }
+
+        /**
+         * Fetches data, attempts to use cache, and updates cache.
+         * @param {string} type - The type of data to fetch.
+         * @returns {Promise<Array>} A promise that resolves with the data.
+         */
+        async function getCachedData(type) {
+            const cacheKey = `socialShowcase_${type}`;
+            const cached = localStorage.getItem(cacheKey);
+
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    console.log(`Using cached data for ${type}`);
+                    return data;
+                } else {
+                    console.log(`Cache expired for ${type}`);
+                    localStorage.removeItem(cacheKey); // Clear expired cache
+                }
+            }
+
+            console.log(`Fetching new data for ${type}`);
+            const newData = await fetchData(type);
+            localStorage.setItem(cacheKey, JSON.stringify({ data: newData, timestamp: Date.now() }));
+            return newData;
+        }
+
+        /**
+         * Creates a content card HTML element.
+         * @param {object} item - The data item for the card.
+         * @param {string} type - The type of content (blog, youtube, github).
+         * @returns {HTMLElement} The created card element.
+         */
+        function createCardElement(item, type) {
+            const card = document.createElement('a');
+            card.href = item.url;
+            card.target = "_blank"; // Open in new tab
+            card.rel = "noopener noreferrer"; // Security best practice
+            card.className = `content-card block bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out overflow-hidden p-4 flex flex-col`; // Base classes
+
+            let imageHtml = '';
+            let descriptionHtml = '';
+            let metaHtml = '';
+
+            if (type === 'youtube' && item.thumbnailUrl) {
+                imageHtml = `
+                    <div class="card-image-container w-full h-40 mb-3 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
+                        <img src="${item.thumbnailUrl}" alt="${item.title}" class="card-image object-cover w-full h-full" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x225/cccccc/333333?text=No+Image';">
+                    </div>
+                `;
+                descriptionHtml = `<p class="card-description text-sm text-gray-600 mb-2 line-clamp-2">${item.title}</p>`;
+                metaHtml = `<p class="card-meta text-xs text-gray-500">Views: ${item.views} • Published: ${new Date(item.publishedAt).toLocaleDateString()}</p>`;
+            } else if (type === 'github' && item.description) {
+                imageHtml = `
+                    <div class="card-image-container w-full h-40 mb-3 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
+                        <img src="https://placehold.co/400x225/333333/ffffff?text=GitHub" alt="GitHub Repository" class="card-image object-cover w-full h-full" loading="lazy">
+                    </div>
+                `;
+                descriptionHtml = `<p class="card-description text-sm text-gray-600 mb-2 line-clamp-2">${item.description}</p>`;
+                metaHtml = `<p class="card-meta text-xs text-gray-500">⭐ ${item.stars} • Language: ${item.language}</p>`;
+            } else if (type === 'blog' && item.snippet) {
+                 imageHtml = `
+                    <div class="card-image-container w-full h-40 mb-3 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
+                        <img src="https://placehold.co/400x225/4a90e2/ffffff?text=Blog" alt="Blog Post" class="card-image object-cover w-full h-full" loading="lazy">
+                    </div>
+                `;
+                descriptionHtml = `<p class="card-description text-sm text-gray-600 mb-2 line-clamp-2">${item.snippet}</p>`;
+                metaHtml = `<p class="card-meta text-xs text-gray-500">Published: ${new Date(item.date).toLocaleDateString()}</p>`;
+            }
+
+            card.innerHTML = `
+                ${imageHtml}
+                <div class="card-content flex-grow">
+                    <h3 class="card-title text-lg font-semibold text-gray-800 mb-1">${item.title || item.name}</h3>
+                    ${descriptionHtml}
+                    ${metaHtml}
+                </div>
+            `;
+            return card;
+        }
+
+        /**
+         * Renders content into a specified container with pagination.
+         * @param {HTMLElement} container - The DOM element to render content into.
+         * @param {Array} data - The array of all data items for the section.
+         * @param {string} type - The type of content (blog, youtube, github).
+         * @param {number} currentPage - The current page number to display.
+         * @param {number} itemsPerPage - The number of items to display per page.
+         * @param {object} paginationControls - Object with references to pagination buttons and info span.
+         */
+        function renderContent(container, data, type, currentPage, itemsPerPage, paginationControls) {
+            container.innerHTML = ''; // Clear existing content/spinner
+
+            const totalPages = Math.ceil(data.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedData = data.slice(startIndex, endIndex);
+
+            if (paginatedData && paginatedData.length > 0) {
+                paginatedData.forEach(item => {
+                    const card = createCardElement(item, type);
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p class="text-gray-500 text-center col-span-full">No content available for this page.</p>';
+            }
+
+            // Update pagination controls
+            paginationControls.pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            paginationControls.prevBtn.disabled = currentPage === 1;
+            paginationControls.nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        /**
+         * Applies the current view style (grid or list) to all content containers.
+         */
+        function applyViewStyle() {
+            // Apply to showcase view sections
+            [blogContentDiv, youtubeContentDiv, githubContentDiv].forEach(container => {
+                container.classList.remove('content-grid', 'content-list');
+                container.classList.add(`content-${currentView}`);
+            });
+            // Apply to dynamic single section content
+            dynamicSingleSectionContent.classList.remove('content-grid', 'content-list');
+            dynamicSingleSectionContent.classList.add(`content-${currentView}`);
+
+
+            // Update button active states
+            if (currentView === 'grid') {
+                toggleGridBtn.classList.remove('bg-gray-300', 'text-gray-800');
+                toggleGridBtn.classList.add('bg-blue-500', 'text-white');
+                toggleListBtn.classList.remove('bg-blue-500', 'text-white');
+                toggleListBtn.classList.add('bg-gray-300', 'text-gray-800');
+            } else {
+                toggleListBtn.classList.remove('bg-gray-300', 'text-gray-800');
+                toggleListBtn.classList.add('bg-blue-500', 'text-white');
+                toggleGridBtn.classList.remove('bg-blue-500', 'text-white');
+                toggleGridBtn.classList.add('bg-gray-300', 'text-gray-800');
+            }
+        }
+
+        /**
+         * Updates the current page for a given content type and re-renders the content.
+         * @param {string} type - The type of content (blog, youtube, github).
+         * @param {string} direction - 'prev' or 'next'.
+         * @param {boolean} isAllContentView - True if updating pagination for the 'all content' view.
+         */
+        function updatePagination(type, direction, isAllContentView = false) {
+            const state = pageStates[type];
+            const totalPages = Math.ceil(state.data.length / ITEMS_PER_PAGE);
+
+            if (isAllContentView) {
+                if (direction === 'prev' && state.allContentCurrentPage > 1) {
+                    state.allContentCurrentPage--;
+                } else if (direction === 'next' && state.allContentCurrentPage < totalPages) {
+                    state.allContentCurrentPage++;
+                }
+                renderContent(dynamicSingleSectionContent, state.data, type, state.allContentCurrentPage, ITEMS_PER_PAGE, { prevBtn: dynamicPrevBtn, nextBtn: dynamicNextBtn, pageInfo: dynamicPageInfo });
+            } else {
+                if (direction === 'prev' && state.currentPage > 1) {
+                    state.currentPage--;
+                } else if (direction === 'next' && state.currentPage < totalPages) {
+                    state.currentPage++;
+                }
+                const container = document.getElementById(`${type}-content`);
+                const prevBtn = document.getElementById(`${type}-prev-btn`);
+                const nextBtn = document.getElementById(`${type}-next-btn`);
+                const pageInfo = document.getElementById(`${type}-page-info`);
+                renderContent(container, state.data, type, state.currentPage, ITEMS_PER_PAGE, { prevBtn, nextBtn, pageInfo });
+            }
+        }
+
+        /**
+         * Renders the main content area based on the currentDisplayMode.
+         */
+        function renderMainContent() {
+            applyViewStyle(); // Ensure view style is applied to correct container
+
+            if (currentDisplayMode === 'showcase') {
+                showcaseView.classList.remove('hidden');
+                allContentView.classList.add('hidden');
+
+                // Render initial page for each section in showcase view
+                renderContent(blogContentDiv, pageStates.blog.data, 'blog', pageStates.blog.currentPage, ITEMS_PER_PAGE, { prevBtn: blogPrevBtn, nextBtn: blogNextBtn, pageInfo: blogPageInfo });
+                renderContent(youtubeContentDiv, pageStates.youtube.data, 'youtube', pageStates.youtube.currentPage, ITEMS_PER_PAGE, { prevBtn: youtubePrevBtn, nextBtn: youtubeNextBtn, pageInfo: youtubePageInfo });
+                renderContent(githubContentDiv, pageStates.github.data, 'github', pageStates.github.currentPage, ITEMS_PER_PAGE, { prevBtn: githubPrevBtn, nextBtn: githubNextBtn, pageInfo: githubPageInfo });
+
+            } else {
+                showcaseView.classList.add('hidden');
+                allContentView.classList.remove('hidden');
+
+                let titleText = '';
+                let type = '';
+
+                if (currentDisplayMode === 'blog-all') {
+                    titleText = 'All Blog Posts';
+                    type = 'blog';
+                } else if (currentDisplayMode === 'youtube-all') {
+                    titleText = 'All YouTube Videos';
+                    type = 'youtube';
+                } else if (currentDisplayMode === 'github-all') {
+                    titleText = 'All GitHub Repositories';
+                    type = 'github';
+                }
+
+                allContentTitle.textContent = titleText;
+                // Reset current page for the "all content" view when switching to it
+                pageStates[type].allContentCurrentPage = 1;
+                renderContent(dynamicSingleSectionContent, pageStates[type].data, type, pageStates[type].allContentCurrentPage, ITEMS_PER_PAGE, { prevBtn: dynamicPrevBtn, nextBtn: dynamicNextBtn, pageInfo: dynamicPageInfo });
+            }
+        }
+
+        /**
+         * Initializes the widget by fetching all content and rendering the initial view.
+         */
+        async function initializeWidget() {
+            try {
+                // Fetch all data first for all sections
+                const [blogData, youtubeData, githubData] = await Promise.all([
+                    getCachedData('blog'),
+                    getCachedData('youtube'),
+                    getCachedData('github')
+                ]);
+
+                // Store fetched data in pageStates
+                pageStates.blog.data = blogData;
+                pageStates.blog.allContentCurrentPage = 1; // Initialize all content page
+                pageStates.youtube.data = youtubeData;
+                pageStates.youtube.allContentCurrentPage = 1;
+                pageStates.github.data = githubData;
+                pageStates.github.allContentCurrentPage = 1;
+
+                renderMainContent(); // Render the initial showcase view
+
+            } catch (error) {
+                console.error("Error initializing widget:", error);
+                // Display error messages in all relevant content areas
+                blogContentDiv.innerHTML = '<p class="text-red-500 text-center col-span-full">Failed to load blog content.</p>';
+                youtubeContentDiv.innerHTML = '<p class="text-red-500 text-center col-span-full">Failed to load YouTube content.</p>';
+                githubContentDiv.innerHTML = '<p class="text-red-500 text-center col-span-full">Failed to load GitHub content.</p>';
+                dynamicSingleSectionContent.innerHTML = '<p class="text-red-500 text-center col-span-full">Failed to load content.</p>';
+            }
+        }
+
+        // --- Event Listeners ---
+        toggleGridBtn.addEventListener('click', () => {
+            currentView = 'grid';
+            localStorage.setItem(VIEW_KEY, 'grid');
+            applyViewStyle();
+        });
+
+        toggleListBtn.addEventListener('click', () => {
+            currentView = 'list';
+            localStorage.setItem(VIEW_KEY, 'list');
+            applyViewStyle();
+        });
+
+        // Pagination event listeners for showcase view
+        blogPrevBtn.addEventListener('click', () => updatePagination('blog', 'prev', false));
+        blogNextBtn.addEventListener('click', () => updatePagination('blog', 'next', false));
+
+        youtubePrevBtn.addEventListener('click', () => updatePagination('youtube', 'prev', false));
+        youtubeNextBtn.addEventListener('click', () => updatePagination('youtube', 'next', false));
+
+        githubPrevBtn.addEventListener('click', () => updatePagination('github', 'prev', false));
+        githubNextBtn.addEventListener('click', () => updatePagination('github', 'next', false));
+
+        // View All button listeners
+        viewAllBlogBtn.addEventListener('click', () => {
+            currentDisplayMode = 'blog-all';
+            currentAllContentType = 'blog';
+            renderMainContent();
+        });
+        viewAllYoutubeBtn.addEventListener('click', () => {
+            currentDisplayMode = 'youtube-all';
+            currentAllContentType = 'youtube';
+            renderMainContent();
+        });
+        viewAllGithubBtn.addEventListener('click', () => {
+            currentDisplayMode = 'github-all';
+            currentAllContentType = 'github';
+            renderMainContent();
+        });
+
+        // Back to Main button listener
+        backToMainBtn.addEventListener('click', () => {
+            currentDisplayMode = 'showcase';
+            currentAllContentType = ''; // Clear the type
+            renderMainContent();
+        });
+
+        // Pagination event listeners for the dynamic "all content" view
+        dynamicPrevBtn.addEventListener('click', () => updatePagination(currentAllContentType, 'prev', true));
+        dynamicNextBtn.addEventListener('click', () => updatePagination(currentAllContentType, 'next', true));
+
+
+        // --- Initialize on DOMContentLoaded ---
+        document.addEventListener('DOMContentLoaded', initializeWidget);
+
+        // Basic IntersectionObserver for lazy loading images (if real images were used)
+        // For this mock setup, images are placeholders and loaded immediately.
+        // This is an example of how you'd implement it if images were heavy.
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.getAttribute('data-src'); // Assuming data-src for lazy loading
+                    if (src) {
+                        img.src = src;
+                        img.removeAttribute('data-src');
+                    }
+                    observer.unobserve(img);
+                }
+            });
+        });
+
+        // Example of observing images (if they had data-src)
+        // document.querySelectorAll('img[data-src]').forEach(img => {
+        //     observer.observe(img);
+        // });
+
+    </script>
+</body>
+</html>
